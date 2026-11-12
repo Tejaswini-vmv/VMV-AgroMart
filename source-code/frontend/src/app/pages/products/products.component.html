@@ -1,0 +1,44 @@
+<div class="container">
+  <h2>Fresh from Farmers</h2>
+
+  <p *ngIf="loading">Loading products…</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <p *ngIf="!loading && products.length === 0 && !error">No products listed yet. Farmers can add products from the API.</p>
+
+  <div class="product-grid">
+    <div class="card product-card" *ngFor="let p of products">
+      <div class="product-image">
+        <img
+          *ngIf="p.productImageUrl"
+          [src]="p.productImageUrl"
+          [alt]="p.productName"
+          loading="lazy"
+          (error)="onImageError($event)">
+        <div class="product-image-fallback" [style.display]="p.productImageUrl ? 'none' : 'flex'">
+          <span>{{ fallbackIcon(p.category) }}</span>
+        </div>
+        <span class="badge organic-badge" *ngIf="p.isOrganic">🌱 Organic</span>
+        <span class="badge category-badge">{{ p.category }}</span>
+      </div>
+
+      <div class="product-body">
+        <h3>{{ p.productName }}</h3>
+        <p class="description">{{ p.description }}</p>
+        <p class="price">₹{{ p.pricePerUnit }} <span class="unit">/ {{ p.unitOfMeasure }}</span></p>
+        <p class="stock">{{ p.availableQuantity }} {{ p.unitOfMeasure }} available</p>
+
+        <div class="actions">
+          <input
+            type="number"
+            [(ngModel)]="quantities[p.id]"
+            [placeholder]="'Qty (min ' + p.minimumOrderQuantity + ')'">
+          <button (click)="addToCart(p)">Add to cart</button>
+        </div>
+
+        <button *ngIf="isSuperAdmin" (click)="removeFromCatalog(p)" style="background:#c62828; margin-top:8px;">
+          Remove from catalog
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+<div class="container" style="max-width: 420px;">
+  <h2>VMV AgroMart — Sign in</h2>
+
+  <div class="card" *ngIf="step === 'phone'">
+    <h3 style="margin-top:0;">Quick test login</h3>
+    <p>Pick a role to instantly sign in as that pre-seeded demo account — each role always keeps its own phone number/account, so this is the reliable way to switch roles while testing.</p>
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:20px;">
+      <button *ngFor="let acc of testAccounts" (click)="quickLogin(acc.phone)" [disabled]="loading" style="text-align:left;">
+        {{ acc.label }} <span style="opacity:.7;">({{ acc.phone }})</span>
+      </button>
+    </div>
+
+    <hr style="margin:20px 0;">
+
+    <p>Or enter any phone number to receive a login OTP.</p>
+    <input type="tel" [(ngModel)]="phoneNumber" placeholder="+919876543210" style="width:100%; margin-bottom:12px;">
+    <button (click)="sendOtp()" [disabled]="loading || !phoneNumber">Send OTP</button>
+    <p class="error" *ngIf="error">{{ error }}</p>
+  </div>
+
+  <div class="card" *ngIf="step === 'otp'">
+    <p>Enter the 6-digit OTP sent to <strong>{{ phoneNumber }}</strong>.</p>
+    <p class="success" *ngIf="devOtp">Dev mode (no SMS provider configured) — your OTP is <strong>{{ devOtp }}</strong> (pre-filled below)</p>
+
+    <input type="text" [(ngModel)]="otp" placeholder="OTP" style="width:100%; margin-bottom:12px;">
+
+    <div style="margin-bottom:12px;">
+      <label>New here? Provide your name and role to register:</label><br>
+      <p style="font-size:.85em; opacity:.75; margin:4px 0;">
+        Note: role only applies when this phone number is registering for the first time.
+        If this number already has an account, it keeps its original role no matter what you pick here.
+      </p>
+      <input type="text" [(ngModel)]="fullName" placeholder="Full name" style="width:100%; margin:6px 0;">
+      <select [(ngModel)]="role" style="width:100%; margin-bottom:6px;">
+        <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+      </select>
+      <input type="text" [(ngModel)]="city" placeholder="City (required for City Admin / Storage Admin / Delivery Provider / Farmer)" style="width:100%;">
+    </div>
+
+    <button (click)="verifyOtp()" [disabled]="loading || !otp">Verify & Continue</button>
+    <p class="error" *ngIf="error">{{ error }}</p>
+  </div>
+</div>

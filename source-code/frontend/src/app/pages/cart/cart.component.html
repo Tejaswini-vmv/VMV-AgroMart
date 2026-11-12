@@ -1,0 +1,39 @@
+<div class="container">
+  <h2>Your Cart</h2>
+
+  <p *ngIf="cart.items.length === 0">Your cart is empty.</p>
+
+  <div class="card" *ngFor="let item of cart.items">
+    <strong>{{ item.product.productName }}</strong> — {{ item.quantity }} {{ item.product.unitOfMeasure }}
+    × ₹{{ item.product.pricePerUnit }} = ₹{{ item.quantity * item.product.pricePerUnit }}
+    <button (click)="remove(item.product.id)" style="background:#c62828; margin-left:12px;">Remove</button>
+  </div>
+
+  <div class="card" *ngIf="cart.items.length > 0">
+    <h3>Total: ₹{{ cart.total }}</h3>
+
+    <input type="text" [(ngModel)]="deliveryAddress" placeholder="Delivery address" style="width:100%; margin-bottom:8px;">
+    <input type="text" [(ngModel)]="deliveryCity" placeholder="City" style="width:100%; margin-bottom:8px;">
+    <input type="text" [(ngModel)]="deliveryPincode" placeholder="Pincode" style="width:100%; margin-bottom:8px;">
+    <input type="text" [(ngModel)]="deliveryContactPhone" placeholder="Contact phone" style="width:100%; margin-bottom:8px;">
+
+    <label style="display:block; margin-bottom:4px;">Delivery date (optional — leave blank for ASAP)</label>
+    <input type="date" [(ngModel)]="requestedDeliveryDate" style="width:100%; margin-bottom:8px;">
+
+    <label style="display:block; margin-bottom:4px;">Preferred time slot</label>
+    <select [(ngModel)]="requestedDeliveryTimeSlot" style="width:100%; margin-bottom:8px;">
+      <option value="">No preference</option>
+      <option *ngFor="let t of timeSlots" [value]="t">{{ t }}</option>
+    </select>
+
+    <select [(ngModel)]="paymentMethod" style="width:100%; margin-bottom:8px;">
+      <option value="COD">Cash on Delivery</option>
+      <option value="ONLINE">Online</option>
+      <option value="UPI">UPI</option>
+    </select>
+
+    <button (click)="placeOrder()" [disabled]="loading">Place Order</button>
+    <p class="error" *ngIf="error">{{ error }}</p>
+    <p class="success" *ngIf="success">{{ success }}</p>
+  </div>
+</div>

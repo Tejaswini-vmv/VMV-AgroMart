@@ -1,0 +1,112 @@
+<div class="container">
+  <h2>🏬 Storage Admin Dashboard</h2>
+  <p>Same kind of view as the Super Admin dashboard, scoped to your city{{ city ? ' — ' + city : '' }}. Track sell requests, farmers, and manage order delivery status for this city only.</p>
+  <p class="error" *ngIf="!city">⚠️ Your account has no city assigned. Contact the super admin to assign one — until then, requests may fail.</p>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <p class="success" *ngIf="success">{{ success }}</p>
+
+  <h3>City overview</h3>
+  <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:12px; margin-bottom:20px;">
+    <div class="card"><strong>{{ totalSellRequests }}</strong><br>Total sell requests</div>
+    <div class="card"><strong>{{ totalOrders }}</strong><br>Total orders</div>
+    <div class="card"><strong>{{ farmers.length }}</strong><br>Total farmers</div>
+    <div class="card"><strong>₹{{ totalOrderRevenue }}</strong><br>Total order revenue</div>
+    <div class="card" *ngFor="let s of statusKeys()">
+      <strong [style.color]="statusColor(s)">{{ sellRequestsByStatus[s] }}</strong><br>{{ s }}
+    </div>
+  </div>
+
+  <h3 style="margin-top:24px;">👨‍🌾 Farmers in your city</h3>
+  <p *ngIf="loadingFarmers">Loading…</p>
+  <p *ngIf="!loadingFarmers && farmers.length === 0">No farmers registered in your city yet.</p>
+  <table *ngIf="!loadingFarmers && farmers.length > 0" style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+    <thead>
+      <tr style="text-align:left; border-bottom:2px solid #ddd;">
+        <th style="padding:6px;">Name</th>
+        <th style="padding:6px;">Phone</th>
+        <th style="padding:6px;">Total requests</th>
+        <th style="padding:6px;">Listed</th>
+        <th style="padding:6px;">Pending</th>
+        <th style="padding:6px;">Rejected</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let f of farmers" style="border-bottom:1px solid #eee;">
+        <td style="padding:6px;">{{ f.farmer.fullName }}</td>
+        <td style="padding:6px;">{{ f.farmer.phoneNumber }}</td>
+        <td style="padding:6px;">{{ f.totalSellRequests }}</td>
+        <td style="padding:6px;">{{ f.listedProducts }}</td>
+        <td style="padding:6px;">{{ f.pendingRequests }}</td>
+        <td style="padding:6px;">{{ f.rejectedRequests }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:24px;">Sell requests in your city (tracking)</h3>
+  <label>Filter by status:
+    <select [(ngModel)]="statusFilter" (change)="loadAll()">
+      <option value="">All</option>
+      <option value="SUBMITTED">Submitted</option>
+      <option value="VISIT_SCHEDULED">Visit scheduled</option>
+      <option value="APPROVED">Approved</option>
+      <option value="PURCHASED">Purchased</option>
+      <option value="REJECTED">Rejected</option>
+      <option value="LISTED">Listed</option>
+    </select>
+  </label>
+
+  <p *ngIf="loadingAll">Loading…</p>
+  <table *ngIf="!loadingAll && allRequests.length > 0" style="width:100%; border-collapse:collapse; margin-top:10px; margin-bottom:20px;">
+    <thead>
+      <tr style="text-align:left; border-bottom:2px solid #ddd;">
+        <th style="padding:6px;">Product</th>
+        <th style="padding:6px;">Farmer</th>
+        <th style="padding:6px;">Qty</th>
+        <th style="padding:6px;">Status</th>
+        <th style="padding:6px;">City Admin</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of allRequests" style="border-bottom:1px solid #eee;">
+        <td style="padding:6px;">{{ r.productName }}</td>
+        <td style="padding:6px;">{{ r.farmer.fullName }}</td>
+        <td style="padding:6px;">{{ r.quantity }} {{ r.unitOfMeasure }}</td>
+        <td style="padding:6px;"><span [style.color]="statusColor(r.status)">● {{ r.status }}</span></td>
+        <td style="padding:6px;">{{ r.cityAdmin?.fullName || '—' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-top:24px;">Manage orders in your city</h3>
+  <p *ngIf="loadingOrders">Loading…</p>
+  <p *ngIf="!loadingOrders && orders.length === 0">No orders in your city yet.</p>
+  <table *ngIf="!loadingOrders && orders.length > 0" style="width:100%; border-collapse:collapse; margin-top:10px;">
+    <thead>
+      <tr style="text-align:left; border-bottom:2px solid #ddd;">
+        <th style="padding:6px;">Order #</th>
+        <th style="padding:6px;">Customer</th>
+        <th style="padding:6px;">Scheduled delivery</th>
+        <th style="padding:6px;">Total</th>
+        <th style="padding:6px;">Payment</th>
+        <th style="padding:6px;">Status</th>
+        <th style="padding:6px;">Update status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let o of orders" style="border-bottom:1px solid #eee;">
+        <td style="padding:6px;">{{ o.orderNumber }}</td>
+        <td style="padding:6px;">{{ o.customer?.fullName || '—' }}</td>
+        <td style="padding:6px;">{{ o.requestedDeliveryDate ? (o.requestedDeliveryDate + ' ' + (o.requestedDeliveryTimeSlot || '')) : 'ASAP' }}</td>
+        <td style="padding:6px;">₹{{ o.totalAmount }}</td>
+        <td style="padding:6px;">{{ o.paymentMethod }} ({{ o.paymentStatus }})</td>
+        <td style="padding:6px;"><span [style.color]="orderStatusColor(o.orderStatus)">● {{ o.orderStatus }}</span></td>
+        <td style="padding:6px;">
+          <select #statusSelect [value]="o.orderStatus" (change)="changeOrderStatus(o, statusSelect.value)">
+            <option *ngFor="let s of orderStatusOptions" [value]="s">{{ s }}</option>
+          </select>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

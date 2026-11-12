@@ -1,0 +1,261 @@
+# ============================================================================
+# VMV AgroMart - Testing Environment Configuration
+# application-testing.yaml
+# ============================================================================
+
+spring:
+  application:
+    name: vmv-agromart-testing
+
+  # Database Configuration
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:vmv_agromart}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:agromart_user}
+    password: ${DB_PASSWORD:agromart_password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-create in testing
+    show-sql: true  # Show SQL for debugging
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000
+      jedis:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 minutes
+
+  # Servlet Configuration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 15MB
+      file-size-threshold: 2MB
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+  compression:
+    enabled: true
+  error:
+    include-message: always
+    include-stacktrace: on_param  # Include stacktrace for debugging
+
+# Management & Actuator (Testing)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+
+# Logging Configuration (Verbose for testing)
+logging:
+  level:
+    root: INFO
+    com.vmvagromart: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE_PATH:/app/logs/testing.log}
+    max-size: 10MB
+    max-history: 7
+
+# JWT Security Configuration
+security:
+  jwt:
+    secret: ${JWT_SECRET:test-jwt-secret-key-for-testing-only-change-in-prod}
+    expiration: 1800000  # 30 minutes
+    refresh-expiration: 604800000  # 7 days
+    header: Authorization
+    prefix: Bearer
+
+# OTP Configuration (Testing - shorter expiry for quick testing)
+otp:
+  length: 6
+  expiry-minutes: 5
+  max-attempts: 5  # More attempts for testing
+  max-daily-requests: 20  # Higher limit for testing
+  test-mode: true  # Enable test OTP bypass
+
+# SMS Gateway Configuration (Testing)
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN}
+  phone-number: ${TWILIO_PHONE_NUMBER}
+  enabled: ${SMS_ENABLED:true}  # Can disable for testing
+  test-mode: true  # Logs SMS instead of sending
+
+# Payment Gateway Configuration (Testing - Sandbox)
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID}
+  key-secret: ${RAZORPAY_KEY_SECRET}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+  mode: test  # Sandbox mode
+  currency: INR
+  receipt-prefix: RCP_TEST_
+
+# Maps API Configuration
+maps:
+  google:
+    api-key: ${GOOGLE_MAPS_API_KEY}
+    enabled: true
+
+# File Upload Configuration
+file:
+  upload:
+    base-path: ${UPLOAD_PATH:/app/uploads}
+    max-size: 10485760  # 10MB
+    allowed-types: jpg,jpeg,png,pdf,doc,docx
+    temp-path: ${TEMP_PATH:/app/temp}
+
+# Email Configuration (Testing - Optional)
+mail:
+  smtp:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    from: ${SMTP_FROM:noreply@vmvagromart.com}
+    enabled: ${EMAIL_ENABLED:false}  # Disable for testing
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+
+# CORS Configuration (Testing - Permissive)
+cors:
+  allowed-origins:
+    - http://localhost:4200
+    - http://localhost:8100
+    - http://localhost:3000
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - PATCH
+    - OPTIONS
+  allowed-headers: '*'
+  allow-credentials: true
+  max-age: 3600
+
+# Rate Limiting Configuration (Testing - Relaxed)
+rate-limit:
+  enabled: true
+  default-limit: 100  # Higher limit for testing
+  per-minute: 60
+  api-key-required: false
+
+# Application Specific Settings
+application:
+  name: VMV AgroMart
+  version: 1.0.0
+  environment: testing
+  features:
+    otp-auth: true
+    payment-gateway: true
+    sms-notifications: true
+    email-notifications: false
+    push-notifications: false
+    realtime-tracking: true
+
+  # Business Rules
+  business:
+    min-order-amount: 200.00
+    delivery-charges: 50.00
+    free-delivery-above: 1000.00
+    tax-percentage: 5.0
+    max-farmers-supported: 10
+
+  # Testing Specific
+  testing:
+    auto-approve-farmers: true  # Auto-approve in testing
+    bypass-payment: false  # Keep payment for testing
+    mock-sms: true  # Use mock SMS service
+    test-otp: "123456"  # Fixed OTP for testing
+
+# Scheduler Configuration
+scheduler:
+  enabled: false  # Disable cron jobs in testing
+  inventory-update-cron: "0 0 2 * * ?"  # 2 AM daily
+  order-cleanup-cron: "0 0 3 * * ?"  # 3 AM daily
+
+# Database Migration
+flyway:
+  enabled: false  # Manual migrations in testing
+  baseline-on-migrate: true
+
+# API Documentation (Swagger)
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+  show-actuator: true
+
+# Session Management
+session:
+  timeout: 1800  # 30 minutes
+  concurrent-sessions: 5  # Multiple sessions for testing
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: false
+  tracing:
+    enabled: false

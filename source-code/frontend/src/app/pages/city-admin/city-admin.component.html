@@ -1,0 +1,142 @@
+<div class="container">
+  <h2>🏙️ City Admin — Sell Requests</h2>
+  <p>Review farmer sell requests for your city: schedule a visit, give final approval with a purchase date, then buy &amp; forward to the super admin. Buying a request closes it on your end and hands it off for cataloguing.</p>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <p class="success" *ngIf="success">{{ success }}</p>
+
+  <h3>👨‍🌾 Farmers in your city</h3>
+  <p *ngIf="loadingFarmers">Loading…</p>
+  <p *ngIf="!loadingFarmers && farmers.length === 0">No farmers registered in your city yet.</p>
+  <table *ngIf="!loadingFarmers && farmers.length > 0" style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+    <thead>
+      <tr style="text-align:left; border-bottom:2px solid #ddd;">
+        <th style="padding:6px;">Name</th>
+        <th style="padding:6px;">Phone</th>
+        <th style="padding:6px;">Total requests</th>
+        <th style="padding:6px;">Listed</th>
+        <th style="padding:6px;">Pending</th>
+        <th style="padding:6px;">Rejected</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let f of farmers" style="border-bottom:1px solid #eee;">
+        <td style="padding:6px;">{{ f.farmer.fullName }}</td>
+        <td style="padding:6px;">{{ f.farmer.phoneNumber }}</td>
+        <td style="padding:6px;">{{ f.totalSellRequests }}</td>
+        <td style="padding:6px;">{{ f.listedProducts }}</td>
+        <td style="padding:6px;">{{ f.pendingRequests }}</td>
+        <td style="padding:6px;">{{ f.rejectedRequests }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="display:flex; align-items:center; gap:10px;">
+    📢 Raise a demand request to a farmer
+    <button (click)="toggleDemandForm()">{{ showDemandForm ? 'Cancel' : 'New demand request' }}</button>
+  </h3>
+  <p>If a customer/retailer needs a product that isn't in stock, ask a specific farmer (or broadcast to all farmers in your city) to supply it by a target date.</p>
+
+  <div *ngIf="showDemandForm" class="card" style="display:flex; flex-direction:column; gap:8px; max-width:420px;">
+    <label>Target farmer (optional — leave blank to broadcast to your whole city)
+      <select [(ngModel)]="demandForm.targetFarmerId">
+        <option [ngValue]="null">— Broadcast to all farmers in my city —</option>
+        <option *ngFor="let f of farmers" [ngValue]="f.farmer.id">{{ f.farmer.fullName }} ({{ f.farmer.phoneNumber }})</option>
+      </select>
+    </label>
+    <label>Product name <input type="text" [(ngModel)]="demandForm.productName"></label>
+    <label>Category
+      <select [(ngModel)]="demandForm.category">
+        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+      </select>
+    </label>
+    <label>Unit
+      <select [(ngModel)]="demandForm.unitOfMeasure">
+        <option *ngFor="let u of units" [value]="u">{{ u }}</option>
+      </select>
+    </label>
+    <label>Quantity needed <input type="number" [(ngModel)]="demandForm.quantity"></label>
+    <label>Offered price per unit (₹, optional) <input type="number" [(ngModel)]="demandForm.offeredPricePerUnit"></label>
+    <label>Needed by date <input type="date" [(ngModel)]="demandForm.neededByDate"></label>
+    <label>Notes <textarea rows="2" [(ngModel)]="demandForm.notes"></textarea></label>
+    <button (click)="raiseDemandRequest()" style="background:#00838f;">Send demand request</button>
+  </div>
+
+  <p *ngIf="loadingDemandRequests">Loading…</p>
+  <div class="card" *ngFor="let d of myDemandRequests">
+    <h4>{{ d.productName }} <span [style.color]="demandStatusColor(d.status)">● {{ d.status }}</span></h4>
+    <p>{{ d.quantity }} {{ d.unitOfMeasure }} needed by {{ d.neededByDate }}
+      <span *ngIf="d.offeredPricePerUnit"> — offered ₹{{ d.offeredPricePerUnit }}/unit</span>
+    </p>
+    <p>{{ d.targetFarmer ? ('Sent to: ' + d.targetFarmer.fullName) : ('Broadcast to all farmers in ' + d.city) }}</p>
+    <p *ngIf="d.status === 'ACCEPTED'">Accepted — linked sell request #{{ d.linkedSellRequestId }}</p>
+    <p *ngIf="d.responseNote">Response note: {{ d.responseNote }}</p>
+    <button *ngIf="d.status === 'OPEN'" (click)="cancelDemandRequest(d.id)" style="background:#c62828;">Cancel</button>
+  </div>
+
+  <h3 style="margin-top:24px;">Sell requests from farmers</h3>
+  <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+    <label>Filter by status:
+      <select [(ngModel)]="statusFilter" (change)="load()">
+        <option value="">All</option>
+        <option value="SUBMITTED">Submitted</option>
+        <option value="VISIT_SCHEDULED">Visit scheduled</option>
+        <option value="APPROVED">Approved</option>
+        <option value="PURCHASED">Purchased</option>
+        <option value="REJECTED">Rejected</option>
+        <option value="LISTED">Listed</option>
+      </select>
+    </label>
+  </div>
+
+  <p *ngIf="loading">Loading…</p>
+  <p *ngIf="!loading && requests.length === 0 && !error">No sell requests found.</p>
+
+  <div class="card" *ngFor="let r of requests">
+    <h3>{{ r.productName }} <span [style.color]="statusColor(r.status)">● {{ r.status }}</span></h3>
+    <p>Farmer: {{ r.farmer.fullName }} ({{ r.farmer.phoneNumber }})</p>
+    <p>{{ r.quantity }} {{ r.unitOfMeasure }} @ ₹{{ r.proposedPricePerUnit }} proposed
+      <span *ngIf="r.agreedPricePerUnit"> — agreed ₹{{ r.agreedPricePerUnit }}</span>
+    </p>
+    <p *ngIf="r.description">{{ r.description }}</p>
+    <p *ngIf="r.visitDate">📅 Visit: {{ r.visitDate }} <span *ngIf="r.visitNotes">— {{ r.visitNotes }}</span></p>
+    <p *ngIf="r.purchaseDate">🛒 Purchase date: {{ r.purchaseDate }}</p>
+    <p *ngIf="r.rejectionReason" class="error">Rejected: {{ r.rejectionReason }}</p>
+
+    <div *ngIf="r.status === 'SUBMITTED' || r.status === 'VISIT_SCHEDULED'" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+      <button (click)="openAction(r.id, 'visit')" style="background:#1565c0;">
+        {{ activeAction?.id === r.id && activeAction?.type === 'visit' ? 'Cancel' : 'Schedule visit' }}
+      </button>
+      <button (click)="openAction(r.id, 'approve')">
+        {{ activeAction?.id === r.id && activeAction?.type === 'approve' ? 'Cancel' : 'Final approve' }}
+      </button>
+      <button (click)="openAction(r.id, 'reject')" style="background:#c62828;">
+        {{ activeAction?.id === r.id && activeAction?.type === 'reject' ? 'Cancel' : 'Reject' }}
+      </button>
+    </div>
+
+    <div *ngIf="r.status === 'APPROVED'" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+      <button (click)="buy(r.id)" style="background:#6a1b9a;">Buy &amp; forward to super admin</button>
+      <button (click)="openAction(r.id, 'reject')" style="background:#c62828;">
+        {{ activeAction?.id === r.id && activeAction?.type === 'reject' ? 'Cancel' : 'Reject' }}
+      </button>
+    </div>
+
+    <div *ngIf="activeAction?.id === r.id && activeAction?.type === 'visit'" style="display:flex; flex-direction:column; gap:8px; max-width:320px; margin-top:10px;">
+      <label>Visit date <input type="date" [(ngModel)]="visitDate"></label>
+      <label>Notes <textarea rows="2" [(ngModel)]="visitNotes"></textarea></label>
+      <button style="background:#1565c0;" (click)="scheduleVisit(r.id)">Confirm visit</button>
+    </div>
+
+    <div *ngIf="activeAction?.id === r.id && activeAction?.type === 'approve'" style="display:flex; flex-direction:column; gap:8px; max-width:320px; margin-top:10px;">
+      <label>Purchase date <input type="date" [(ngModel)]="purchaseDate"></label>
+      <label>Agreed price per unit (₹) <input type="number" [(ngModel)]="agreedPrice"></label>
+      <button (click)="approve(r.id)">Confirm final approval</button>
+    </div>
+
+    <div *ngIf="activeAction?.id === r.id && activeAction?.type === 'reject'" style="display:flex; flex-direction:column; gap:8px; max-width:320px; margin-top:10px;">
+      <label>Reason <textarea rows="2" [(ngModel)]="rejectReason"></textarea></label>
+      <button style="background:#c62828;" (click)="reject(r.id)">Confirm rejection</button>
+    </div>
+  </div>
+</div>

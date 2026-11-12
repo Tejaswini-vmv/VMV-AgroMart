@@ -1,0 +1,39 @@
+<div class="container">
+  <h2>My Orders</h2>
+
+  <p *ngIf="loading">Loading…</p>
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <p *ngIf="!loading && orders.length === 0 && !error">No orders yet.</p>
+
+  <div class="card" *ngFor="let o of orders">
+    <h3>{{ o.orderNumber }} — {{ o.orderStatus }}</h3>
+    <p>Total: ₹{{ o.totalAmount }} | Payment: {{ o.paymentMethod }} ({{ o.paymentStatus }})</p>
+    <p>Placed: {{ o.createdAt | date:'medium' }}</p>
+    <p *ngIf="o.requestedDeliveryDate">📅 Scheduled delivery: {{ o.requestedDeliveryDate }} <span *ngIf="o.requestedDeliveryTimeSlot">({{ o.requestedDeliveryTimeSlot }})</span></p>
+    <button *ngIf="o.orderStatus !== 'DELIVERED' && o.orderStatus !== 'CANCELLED'"
+            (click)="cancel(o.id)" style="background:#c62828;">Cancel order</button>
+
+    <ng-container *ngIf="o.orderStatus === 'DELIVERED'">
+      <p *ngIf="feedbackSubmitted[o.id]" style="color:#2e7d32;">✅ Thanks for your feedback!</p>
+      <button *ngIf="!feedbackSubmitted[o.id]" (click)="openFeedback(o.id)">
+        {{ feedbackOpenFor === o.id ? 'Cancel' : 'Leave feedback' }}
+      </button>
+
+      <div *ngIf="feedbackOpenFor === o.id" style="margin-top:8px; display:flex; flex-direction:column; gap:8px; max-width:320px;">
+        <label>
+          Rating:
+          <select [(ngModel)]="feedbackValue[o.id]">
+            <option [value]="5">⭐⭐⭐⭐⭐ (5)</option>
+            <option [value]="4">⭐⭐⭐⭐ (4)</option>
+            <option [value]="3">⭐⭐⭐ (3)</option>
+            <option [value]="2">⭐⭐ (2)</option>
+            <option [value]="1">⭐ (1)</option>
+          </select>
+        </label>
+        <textarea rows="2" placeholder="How was your experience?" [(ngModel)]="feedbackText[o.id]"></textarea>
+        <p class="error" *ngIf="feedbackError">{{ feedbackError }}</p>
+        <button (click)="submitFeedback(o.id)">Submit feedback</button>
+      </div>
+    </ng-container>
+  </div>
+</div>

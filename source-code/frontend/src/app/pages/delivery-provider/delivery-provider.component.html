@@ -1,0 +1,26 @@
+<div class="container">
+  <h2>🚚 My Deliveries</h2>
+  <p>Orders awaiting delivery in your city{{ city ? ' — ' + city : '' }}. Mark an order Out for Delivery when you pick it up, then Delivered once it reaches the customer.</p>
+  <p class="error" *ngIf="!city">⚠️ Your account has no city assigned. Contact the super admin to assign one — until then, requests may fail.</p>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <p class="success" *ngIf="success">{{ success }}</p>
+
+  <p *ngIf="loading">Loading…</p>
+  <p *ngIf="!loading && orders.length === 0">No orders in your city right now.</p>
+
+  <div class="card" *ngFor="let o of orders">
+    <h3>{{ o.orderNumber }} — <span [style.color]="orderStatusColor(o.orderStatus)">● {{ o.orderStatus }}</span></h3>
+    <p>Customer: {{ o.customer?.fullName || '—' }} | Phone: {{ o.deliveryContactPhone }}</p>
+    <p>Deliver to: {{ o.deliveryAddress }}, {{ o.deliveryCity }} {{ o.deliveryPincode }}</p>
+    <p *ngIf="o.requestedDeliveryDate">📅 Scheduled: {{ o.requestedDeliveryDate }} <span *ngIf="o.requestedDeliveryTimeSlot">({{ o.requestedDeliveryTimeSlot }})</span></p>
+    <p>Total: ₹{{ o.totalAmount }} | Payment: {{ o.paymentMethod }} ({{ o.paymentStatus }})</p>
+
+    <button *ngIf="o.orderStatus === 'PROCESSING' || o.orderStatus === 'CONFIRMED'" (click)="markOutForDelivery(o)">
+      Mark Out for Delivery
+    </button>
+    <button *ngIf="o.orderStatus === 'OUT_FOR_DELIVERY'" (click)="markDelivered(o)" style="background:#2e7d32;">
+      Mark Delivered
+    </button>
+  </div>
+</div>

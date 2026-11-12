@@ -1,0 +1,431 @@
+# ============================================================================
+# VMV AgroMart - Production Environment Configuration
+# application-prod.yaml
+# ============================================================================
+
+spring:
+  application:
+    name: vmv-agromart-production
+
+  # Database Configuration (Production)
+  datasource:
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=true&requireSSL=true&serverTimezone=UTC
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+
+  # JPA/Hibernate Configuration (Production)
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-create in production
+    show-sql: false  # No SQL logging in production
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        generate_statistics: false
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+
+  # Redis Configuration (Production)
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: 60000
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
+      jedis:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+          max-wait: -1ms
+
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000  # 1 hour
+      cache-null-values: false
+
+  # Servlet Configuration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 15MB
+      file-size-threshold: 2MB
+
+# Server Configuration (Production)
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  error:
+    include-message: never  # Don't expose error details
+    include-stacktrace: never  # Never include stacktrace
+    whitelabel:
+      enabled: false
+  http2:
+    enabled: true
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+    key-store: ${SSL_KEYSTORE_PATH}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
+
+# Management & Actuator (Production - Restricted)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized  # Only show details to authorized users
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: ${PROMETHEUS_ENABLED:true}
+
+# Logging Configuration (Production)
+logging:
+  level:
+    root: WARN
+    com.vmvagromart: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE_PATH:/var/log/agromart/production.log}
+    max-size: 50MB
+    max-history: 30
+    total-size-cap: 1GB
+
+# JWT Security Configuration (Production)
+security:
+  jwt:
+    secret: ${JWT_SECRET}  # Must be set in environment
+    expiration: 1800000  # 30 minutes
+    refresh-expiration: 604800000  # 7 days
+    header: Authorization
+    prefix: Bearer
+    issuer: vmvagromart.com
+    audience: vmv-agromart-api
+
+# OTP Configuration (Production)
+otp:
+  length: 6
+  expiry-minutes: 5
+  max-attempts: 3  # Strict in production
+  max-daily-requests: 5  # Limit abuse
+  test-mode: false  # No test mode in production
+  rate-limit:
+    per-ip: 10  # Max 10 OTPs per IP per day
+    per-phone: 5  # Max 5 OTPs per phone per day
+
+# SMS Gateway Configuration (Production)
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID}
+  auth-token: ${TWILIO_AUTH_TOKEN}
+  phone-number: ${TWILIO_PHONE_NUMBER}
+  enabled: true
+  test-mode: false  # Real SMS in production
+  webhook-url: ${TWILIO_WEBHOOK_URL}
+
+# Alternative: AWS SNS
+aws:
+  sns:
+    enabled: ${AWS_SNS_ENABLED:false}
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
+    region: ${AWS_REGION:ap-south-1}
+    sender-id: AGROMART
+
+# Payment Gateway Configuration (Production)
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID}
+  key-secret: ${RAZORPAY_KEY_SECRET}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+  mode: live  # Production mode
+  currency: INR
+  receipt-prefix: RCP_PROD_
+  auto-capture: true
+  timeout: 300  # 5 minutes
+  retry-count: 3
+
+# Maps API Configuration (Production)
+maps:
+  google:
+    api-key: ${GOOGLE_MAPS_API_KEY}
+    enabled: true
+    rate-limit: 1000  # Per day
+
+# File Upload Configuration (Production)
+file:
+  upload:
+    base-path: ${UPLOAD_PATH:/var/agromart/uploads}
+    max-size: 10485760  # 10MB
+    allowed-types: jpg,jpeg,png,pdf
+    temp-path: ${TEMP_PATH:/var/agromart/temp}
+    storage-type: ${STORAGE_TYPE:local}  # local, s3, azure
+
+# AWS S3 Configuration (If using cloud storage)
+aws:
+  s3:
+    enabled: ${AWS_S3_ENABLED:false}
+    bucket-name: ${AWS_S3_BUCKET_NAME}
+    region: ${AWS_S3_REGION:ap-south-1}
+    access-key: ${AWS_S3_ACCESS_KEY}
+    secret-key: ${AWS_S3_SECRET_KEY}
+
+# Email Configuration (Production)
+mail:
+  smtp:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    from: ${SMTP_FROM:noreply@vmvagromart.com}
+    enabled: true
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+        ssl:
+          trust: ${SMTP_HOST}
+      transport:
+        protocol: smtp
+
+# Push Notifications (Production)
+firebase:
+  enabled: ${FIREBASE_ENABLED:true}
+  project-id: ${FIREBASE_PROJECT_ID}
+  credentials-path: ${FIREBASE_CREDENTIALS_PATH:/app/config/firebase-key.json}
+  database-url: ${FIREBASE_DATABASE_URL}
+
+# CORS Configuration (Production - Strict)
+cors:
+  allowed-origins:
+    - ${WEB_URL}  # Only production web URL
+    - ${MOBILE_URL}  # Only production mobile URL
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed-headers:
+    - Authorization
+    - Content-Type
+    - Accept
+  allow-credentials: true
+  max-age: 3600
+
+# Rate Limiting Configuration (Production - Strict)
+rate-limit:
+  enabled: true
+  default-limit: 60  # Requests per minute
+  per-minute: 60
+  api-key-required: false
+  ip-whitelist: ${IP_WHITELIST:}  # Comma-separated IPs
+  endpoints:
+    /auth/send-otp:
+      limit: 5
+      window: 60  # 5 requests per minute
+    /auth/verify-otp:
+      limit: 10
+      window: 60
+    /orders:
+      limit: 20
+      window: 60
+
+# Application Specific Settings (Production)
+application:
+  name: VMV AgroMart
+  version: 1.0.0
+  environment: production
+  features:
+    otp-auth: true
+    payment-gateway: true
+    sms-notifications: true
+    email-notifications: true
+    push-notifications: true
+    realtime-tracking: true
+    maintenance-mode: ${MAINTENANCE_MODE:false}
+
+  # Business Rules
+  business:
+    min-order-amount: 200.00
+    delivery-charges: 50.00
+    free-delivery-above: 1000.00
+    tax-percentage: 5.0
+    max-farmers-supported: 10
+    order-cancellation-window: 24  # Hours
+    refund-processing-days: 7
+
+  # Production Settings
+  production:
+    auto-approve-farmers: false  # Manual approval
+    bypass-payment: false
+    mock-sms: false
+    strict-validation: true
+
+# Scheduler Configuration (Production)
+scheduler:
+  enabled: true
+  timezone: Asia/Kolkata
+  jobs:
+    inventory-update:
+      cron: "0 0 2 * * ?"  # 2 AM IST daily
+      enabled: true
+    order-cleanup:
+      cron: "0 0 3 * * ?"  # 3 AM IST daily
+      enabled: true
+    expired-session-cleanup:
+      cron: "0 */30 * * * ?"  # Every 30 minutes
+      enabled: true
+    backup-reminder:
+      cron: "0 0 1 * * ?"  # 1 AM IST daily
+      enabled: true
+
+# Database Migration (Production)
+flyway:
+  enabled: ${FLYWAY_ENABLED:true}
+  baseline-on-migrate: true
+  validate-on-migrate: true
+  locations: classpath:db/migration
+  out-of-order: false
+
+# API Documentation (Production - Disabled for security)
+springdoc:
+  api-docs:
+    enabled: false  # Disable in production
+  swagger-ui:
+    enabled: false  # Disable in production
+
+# Session Management (Production)
+session:
+  timeout: 1800  # 30 minutes
+  concurrent-sessions: 3  # Limit concurrent sessions
+  max-sessions-per-user: 3
+  prevent-login-if-max-reached: false
+  expired-url: /auth/session-expired
+
+# Security Headers
+security:
+  headers:
+    frame-options: DENY
+    content-type-options: nosniff
+    xss-protection: 1; mode=block
+    hsts:
+      enabled: true
+      max-age: 31536000
+      include-subdomains: true
+    csp: "default-src 'self'"
+
+# Monitoring & Observability (Production)
+monitoring:
+  enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 1m
+      cloudwatch:
+        enabled: ${CLOUDWATCH_ENABLED:false}
+        namespace: VMVAgroMart
+        batch-size: 20
+  tracing:
+    enabled: ${TRACING_ENABLED:false}
+    sampling-probability: 0.1  # Sample 10% of requests
+
+  # Application Performance Monitoring
+  apm:
+    enabled: ${APM_ENABLED:false}
+    service-name: vmv-agromart-api
+    environment: production
+
+# Circuit Breaker (Resilience4j)
+resilience4j:
+  circuitbreaker:
+    instances:
+      payment-gateway:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+      sms-gateway:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+
+# Backup Configuration
+backup:
+  enabled: ${BACKUP_ENABLED:true}
+  schedule: "0 0 1 * * ?"  # 1 AM IST daily
+  retention-days: 30
+  s3:
+    enabled: ${BACKUP_S3_ENABLED:false}
+    bucket: ${BACKUP_S3_BUCKET}
+
+# Disaster Recovery
+disaster-recovery:
+  enabled: ${DR_ENABLED:false}
+  replica-db-url: ${DR_DB_URL}
+  failover-threshold: 5  # Seconds
+  health-check-interval: 30  # Seconds
+
+# Compliance & Audit
+compliance:
+  data-retention-days: 2555  # 7 years
+  audit-log-enabled: true
+  pii-encryption: true
+  gdpr-compliant: true
+
+# Performance Tuning
+performance:
+  connection-pool:
+    max-connections: 20
+    min-connections: 10
+  cache:
+    max-entries: 10000
+    ttl-seconds: 3600
+  thread-pool:
+    core-size: 10
+    max-size: 50
+    queue-capacity: 100

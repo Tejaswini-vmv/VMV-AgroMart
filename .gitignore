@@ -1,0 +1,46 @@
+# Environment variables and secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+coverage/
+.npm/
+
+# Logs
+*.log
+logs/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Database files - pending sensitive data review
+Database/*.sql
+
+# Backup and temporary test files
+*.backup
+testfile.txt
+node_modules*/

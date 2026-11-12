@@ -1,0 +1,87 @@
+<div class="container">
+  <h2>🌱 Sell Your Produce</h2>
+  <p>Submit a request to sell a batch of produce to your city admin. Once approved and purchased, it will be forwarded to the super admin to list in the public catalog.</p>
+
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <p class="success" *ngIf="success">{{ success }}</p>
+
+  <h3>📢 Requests from your City Admin</h3>
+  <p>Sometimes a city admin or the super admin needs a product because customers/retailers are asking for it — respond here to accept or decline.</p>
+  <p *ngIf="loadingDemandRequests">Loading…</p>
+  <p *ngIf="!loadingDemandRequests && demandRequests.length === 0">No demand requests right now.</p>
+  <div class="card" *ngFor="let d of demandRequests">
+    <h4>{{ d.productName }} <span [style.color]="demandStatusColor(d.status)">● {{ d.status }}</span></h4>
+    <p>{{ d.quantity }} {{ d.unitOfMeasure }} needed by {{ d.neededByDate }}
+      <span *ngIf="d.offeredPricePerUnit"> — offered ₹{{ d.offeredPricePerUnit }}/unit</span>
+    </p>
+    <p *ngIf="d.notes">{{ d.notes }}</p>
+    <p>Raised by: {{ d.raisedBy.fullName }} ({{ d.raisedBy.role }})</p>
+    <div *ngIf="d.status === 'OPEN'" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px;">
+      <label>Your price per unit (₹, optional)
+        <input type="number" [(ngModel)]="respondingPrice[d.id]" style="width:100px;">
+      </label>
+      <button (click)="respondToDemand(d.id, true)" style="background:#2e7d32;">Accept</button>
+      <button (click)="respondToDemand(d.id, false)" style="background:#c62828;">Decline</button>
+    </div>
+  </div>
+
+  <h3 style="margin-top:24px;">🌱 Sell Your Produce</h3>
+  <button (click)="showForm = !showForm">{{ showForm ? 'Cancel' : '+ New Sell Request' }}</button>
+
+  <div class="card" *ngIf="showForm" style="margin-top:16px;">
+    <h3>New Sell Request</h3>
+    <p class="error" *ngIf="error">{{ error }}</p>
+
+    <div style="display:flex; flex-direction:column; gap:10px; max-width:420px;">
+      <label>Product name
+        <input [(ngModel)]="form.productName" placeholder="e.g. Fresh Tomatoes">
+      </label>
+      <label>Category
+        <select [(ngModel)]="form.category">
+          <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+        </select>
+      </label>
+      <label>Unit of measure
+        <select [(ngModel)]="form.unitOfMeasure">
+          <option *ngFor="let u of units" [value]="u">{{ u }}</option>
+        </select>
+      </label>
+      <label>Quantity
+        <input type="number" [(ngModel)]="form.quantity" placeholder="e.g. 100">
+      </label>
+      <label>Proposed price per unit (₹)
+        <input type="number" [(ngModel)]="form.proposedPricePerUnit" placeholder="e.g. 25">
+      </label>
+      <label>Description
+        <textarea rows="2" [(ngModel)]="form.description"></textarea>
+      </label>
+      <label>Image URL
+        <input [(ngModel)]="form.productImageUrl" placeholder="https://...">
+      </label>
+      <label>Harvest date
+        <input type="date" [(ngModel)]="form.harvestDate">
+      </label>
+      <label>
+        <input type="checkbox" [(ngModel)]="form.isOrganic"> Organic
+      </label>
+      <button [disabled]="submitting" (click)="submit()">{{ submitting ? 'Submitting…' : 'Submit request' }}</button>
+    </div>
+  </div>
+
+  <h3 style="margin-top:24px;">My Sell Requests</h3>
+  <p *ngIf="loading">Loading…</p>
+  <p *ngIf="!loading && requests.length === 0">No sell requests yet.</p>
+
+  <div class="card" *ngFor="let r of requests">
+    <h3>{{ r.productName }} <span [style.color]="statusColor(r.status)">● {{ r.status }}</span></h3>
+    <p>{{ r.quantity }} {{ r.unitOfMeasure }} @ ₹{{ r.proposedPricePerUnit }} proposed
+      <span *ngIf="r.agreedPricePerUnit"> — agreed ₹{{ r.agreedPricePerUnit }}</span>
+    </p>
+    <p *ngIf="r.description">{{ r.description }}</p>
+    <p *ngIf="r.visitDate">📅 Visit scheduled: {{ r.visitDate }} <span *ngIf="r.visitNotes">— {{ r.visitNotes }}</span></p>
+    <p *ngIf="r.purchaseDate">🛒 Purchase date: {{ r.purchaseDate }}</p>
+    <p *ngIf="r.cityAdmin">City admin: {{ r.cityAdmin.fullName }}</p>
+    <p *ngIf="r.rejectionReason" class="error">Rejected: {{ r.rejectionReason }}</p>
+    <p *ngIf="r.status === 'LISTED'" class="success">✅ Live in the public catalog</p>
+  </div>
+</div>

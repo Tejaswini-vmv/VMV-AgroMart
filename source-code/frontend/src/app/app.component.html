@@ -1,0 +1,19 @@
+<nav style="background:#2e7d32; padding:12px 16px; display:flex; align-items:center; gap:16px;">
+  <strong style="color:#fff;">🌾 VMV AgroMart</strong>
+  <ng-container *ngIf="auth.currentUser$ | async as user">
+    <a routerLink="/products" style="color:#fff;">Products</a>
+    <ng-container *ngIf="user.role === 'CUSTOMER' || user.role === 'RETAILER'">
+      <a routerLink="/cart" style="color:#fff;">Cart</a>
+      <a routerLink="/orders" style="color:#fff;">Orders</a>
+    </ng-container>
+    <a *ngIf="user.role === 'FARMER'" routerLink="/sell-requests" style="color:#fff;">Sell Request</a>
+    <a *ngIf="user.role === 'CITY_ADMIN'" routerLink="/city-admin/requests" style="color:#fff;">Review Requests</a>
+    <a *ngIf="user.role === 'SUPER_ADMIN'" routerLink="/admin/dashboard" style="color:#fff;">Admin Dashboard</a>
+    <a *ngIf="user.role === 'STORAGE_ADMIN'" routerLink="/storage-admin/dashboard" style="color:#fff;">Storage Dashboard</a>
+    <a *ngIf="user.role === 'DELIVERY_PROVIDER'" routerLink="/delivery/orders" style="color:#fff;">My Deliveries</a>
+    <span style="margin-left:auto; color:#fff;">{{ user.fullName }} <em style="opacity:.8;">({{ user.role }})</em></span>
+    <button (click)="logout()" style="background:#1b5e20;">Logout</button>
+  </ng-container>
+</nav>
+
+<router-outlet></router-outlet>

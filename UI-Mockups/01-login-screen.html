@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VMV AgroMart - Login Screen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            border: 8px solid #1a1a1a;
+        }
+        .notch {
+            width: 200px;
+            height: 30px;
+            background: #1a1a1a;
+            margin: 0 auto;
+            border-radius: 0 0 20px 20px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        .status-bar {
+            padding: 35px 20px 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #333;
+        }
+        .app-content {
+            padding: 20px 30px;
+            height: calc(100% - 55px);
+            overflow-y: auto;
+        }
+        .logo-section {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            font-weight: bold;
+        }
+        .app-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        .tagline {
+            font-size: 14px;
+            color: #666;
+        }
+        .form-section {
+            margin-top: 40px;
+        }
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: white;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        .phone-prefix {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .flag {
+            width: 24px;
+            height: 16px;
+            background: linear-gradient(to bottom, #FF9933 33%, #FFFFFF 33%, #FFFFFF 66%, #138808 66%);
+            border-radius: 2px;
+            margin-right: 12px;
+        }
+        .prefix-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        .info-text {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 30px 0;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+        }
+        .divider-text {
+            padding: 0 15px;
+            font-size: 13px;
+            color: #999;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .feature-item {
+            text-align: center;
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .feature-text {
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="notch"></div>
+
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>📶 📶 📶 🔋</span>
+        </div>
+
+        <div class="app-content">
+            <div class="logo-section">
+                <div class="logo">🌾</div>
+                <div class="app-name">VMV AgroMart</div>
+                <div class="tagline">Farm Fresh, Delivered</div>
+            </div>
+
+            <div class="form-section">
+                <label class="form-label">Mobile Number</label>
+
+                <div class="phone-prefix">
+                    <div class="flag"></div>
+                    <span class="prefix-text">+91</span>
+                </div>
+
+                <div class="input-group">
+                    <input type="tel"
+                           class="input-field"
+                           placeholder="Enter 10-digit mobile number"
+                           value="9823458001">
+                </div>
+
+                <button class="btn-primary">Send OTP</button>
+
+                <div class="info-text">
+                    We'll send you a 6-digit OTP<br>
+                    to verify your mobile number
+                </div>
+            </div>
+
+            <div class="divider">
+                <span class="divider-text">Why VMV AgroMart?</span>
+            </div>
+
+            <div class="features">
+                <div class="feature-item">
+                    <div class="feature-icon">🌱</div>
+                    <div class="feature-text">Fresh Produce</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🚚</div>
+                    <div class="feature-text">Fast Delivery</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💯</div>
+                    <div class="feature-text">Best Prices</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
